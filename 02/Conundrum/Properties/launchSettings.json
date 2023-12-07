@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Conundrum": {
+      "commandName": "Project",
+      "workingDirectory": "..\\"
+    }
+  }
+}

@@ -16,6 +16,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "src", "template\src\src.csproj", "{AAA51993-470D-44D5-8156-6DB05BDFBEB5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "02", "02", "{E4093634-0557-4F9A-BDD6-1B696F982ED8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conundrum", "02\Conundrum\Conundrum.csproj", "{50C48945-A916-4938-B7F0-19238EF90E04}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,12 +38,17 @@ Global
 		{AAA51993-470D-44D5-8156-6DB05BDFBEB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AAA51993-470D-44D5-8156-6DB05BDFBEB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AAA51993-470D-44D5-8156-6DB05BDFBEB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50C48945-A916-4938-B7F0-19238EF90E04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50C48945-A916-4938-B7F0-19238EF90E04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50C48945-A916-4938-B7F0-19238EF90E04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50C48945-A916-4938-B7F0-19238EF90E04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6EB808F8-3E0D-45F3-9B5A-AB4D0783DE3C} = {1EE3E8C3-3D9E-4393-900E-D6D7838DAEB3}
+		{50C48945-A916-4938-B7F0-19238EF90E04} = {E4093634-0557-4F9A-BDD6-1B696F982ED8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4398DBAD-2E32-46B4-B495-CF39CE043A6B}
