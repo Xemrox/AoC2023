@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Trebuchet": {
+      "commandName": "Project",
+      "workingDirectory": "..\\"
+    }
+  }
+}
