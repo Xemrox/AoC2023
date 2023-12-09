@@ -1,17 +1,28 @@
 ﻿
 namespace Shared;
 
-public static class DataLoader
+public static partial class DataLoader
 {
-    public static List<PuzzleInput<T>> LoadInputData<T>(Func<string, T> contentModificationFunction)
+    internal static IEnumerable<FileInfo> ForInputFiles()
     {
         return Directory.GetFiles(@"./input", "*.txt")
             .Select(filePath => new FileInfo(filePath))
             .Where(fileInfo => fileInfo.Name.Contains('_'))
-            .Select(fileInfo => new PuzzleInput<T>(
-                Path.GetFileNameWithoutExtension(fileInfo.Name)
+            .Where(fileInfo => fileInfo.Length > 0);
+    }
+
+    internal static string GetInputName(FileInfo fileInfo)
+    {
+        return Path.GetFileNameWithoutExtension(fileInfo.Name)
                     .Split('_')
-                    .Last(),
+                    .Last();
+    }
+
+    public static List<PuzzleInput<T>> LoadInputData<T>(Func<string, T> contentModificationFunction)
+    {
+        return ForInputFiles()
+            .Select(fileInfo => new PuzzleInput<T>(
+                GetInputName(fileInfo),
                 File.ReadAllLines(fileInfo.FullName)
                     .Select(contentModificationFunction)
                     .ToList()))
@@ -20,19 +31,37 @@ public static class DataLoader
 
     public static List<PuzzleInput<T>> LoadSingleLineInputData<T>(Func<string, T> contentModificationFunction, string splitChar)
     {
-        return Directory.GetFiles(@"./input", "*.txt")
-            .Select(filePath => new FileInfo(filePath))
-            .Where(fileInfo => fileInfo.Name.Contains('_'))
+        return ForInputFiles()
             .Select(fileInfo => new PuzzleInput<T>(
-                Path.GetFileNameWithoutExtension(fileInfo.Name)
-                    .Split('_')
-                    .Last(),
+                GetInputName(fileInfo),
                 File.ReadAllLines(fileInfo.FullName)
                     .SingleOrDefault(String.Empty)
                     .Split(splitChar)
                     .Where(elem => !String.IsNullOrEmpty(elem))
                     .Select(contentModificationFunction)
                     ))
+            .ToList();
+    }
+
+    public static List<PuzzleInput<T>> LoadGroupedInputData<T>(Func<string, T> contentModificationFunction, string seperator)
+    {
+        return ForInputFiles()
+            .Select(fileInfo => new PuzzleInput<T>(
+                GetInputName(fileInfo),
+                File.ReadAllText(fileInfo.FullName)
+                    .Split(seperator)
+                    .Select(contentModificationFunction)
+                    .ToList()))
+            .ToList();
+    }
+
+    public static List<PuzzleInput<T>> LoadAllRawInputData<T>(Func<string, IEnumerable<T>> contentModificationFunction)
+    {
+        return ForInputFiles()
+            .Select(fileInfo => new PuzzleInput<T>(
+                GetInputName(fileInfo),
+                contentModificationFunction(File.ReadAllText(fileInfo.FullName))
+                ))
             .ToList();
     }
 
