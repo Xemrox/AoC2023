@@ -34,14 +34,16 @@ static int Part1(SinglePuzzleInput<GameBoard> input)
     var board = input.Content;
 
     var validNumbers = board.GameNumbers
-        .Where(IsValidNumber)
+        .Where(x => IsValidNumber(board, x))
         .ToArray();
 
     /*var invalidNumbers = board.GameNumbers
-        .Where(x => !IsValidNumber(x))
+        .Where(x => !IsValidNumber(board, x))
         .ToArray();*/
 
-    return validNumbers.Sum(x => x.Value);
+    return validNumbers
+        .Select(x => x.Value(board))
+        .Sum();
 }
 
 static int Part2(SinglePuzzleInput<GameBoard> input)
@@ -49,9 +51,9 @@ static int Part2(SinglePuzzleInput<GameBoard> input)
     return 0;
 }
 
-static bool IsValidNumber(GameNumber gN)
+static bool IsValidNumber(GameBoard board, GameNumber gN)
 {
-    var matrix = gN.InputMatrix;
+    var matrix = board.InputMatrix;
 
     var left = Math.Max(gN.ColumnStartIndex - 1, 0);
     var right = Math.Min(gN.ColumnEndIndex + 1, matrix[0].Length - 1) + 1; //exclusive count
@@ -73,6 +75,7 @@ static bool IsValidNumber(GameNumber gN)
         isLeft || isRight ||
         botSpan.ContainsAnyExcept(PlaceHolder);
 }
+
 static GameBoard TransformInput(string[] lines)
 {
     var inputMatrix = TransposeInput(lines);
@@ -103,11 +106,12 @@ static GameNumber[] ExtractNumbers(char[][] inputMatrix)
                 if (columnDigitStartIndex is not null)
                 {
                     // we reached the end of a number
-                    gameNumbers.Add(new GameNumber(
-                        inputMatrix,
-                        rowIndex,
-                        columnDigitStartIndex.Value,
-                        colIndex - 1));
+                    gameNumbers.Add(new GameNumber()
+                    {
+                        RowIndex = rowIndex,
+                        ColumnStartIndex = columnDigitStartIndex.Value,
+                        ColumnEndIndex = colIndex - 1
+                    });
 
                     columnDigitStartIndex = null;
                 }
@@ -133,13 +137,7 @@ static char[][] TransposeInput(string[] lines)
 
     for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
     {
-        string? line = lines[lineIndex];
-        inputMatrix[lineIndex] = new char[lineWidth];
-
-        for (int charIndex = 0; charIndex < line.Length; charIndex++)
-        {
-            inputMatrix[lineIndex][charIndex] = line[charIndex];
-        }
+        inputMatrix[lineIndex] = lines[lineIndex].ToCharArray();
     }
     return inputMatrix;
 }
@@ -152,24 +150,18 @@ public readonly record struct GameBoard
 
 public readonly record struct GameNumber
 {
-    [SetsRequiredMembers]
-    public GameNumber(char[][] board, int rowIndex, int startColumnIndex, int endColumnIndex)
-    {
-        RowIndex = rowIndex;
-        ColumnStartIndex = startColumnIndex;
-        ColumnEndIndex = endColumnIndex;
-
-        InputMatrix = board;
-        Value = int.Parse(Digits);
-    }
-
-    public required char[][] InputMatrix { get; init; }
-
-    public Span<char> Digits { get => InputMatrix[RowIndex].AsSpan()[ColumnStartIndex..(ColumnEndIndex + 1)]; }
-
     public required int RowIndex { get; init; }
     public required int ColumnStartIndex { get; init; }
     public required int ColumnEndIndex { get; init; }
-    public required int Value { get; init; }
+
+    public Span<char> Digits(GameBoard board)
+    {
+        return board.InputMatrix[RowIndex].AsSpan()[ColumnStartIndex..(ColumnEndIndex + 1)];
+    }
+
+    public int Value(GameBoard board)
+    {
+        return int.Parse(Digits(board));
+    }
 }
 
