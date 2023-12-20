@@ -1,9 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
+﻿
 using Shared;
-
-const char PlaceHolder = '.';
-const string ValidTokens = "0123456789.";
 
 var inputData = DataLoaderSingle.LoadInputData<GameBoard>(TransformInput);
 
@@ -51,29 +47,14 @@ static int Part2(SinglePuzzleInput<GameBoard> input)
     return 0;
 }
 
-static bool IsValidNumber(GameBoard board, GameNumber gN)
+static void GearRatios(GameBoard board)
 {
-    var matrix = board.InputMatrix;
 
-    var left = Math.Max(gN.ColumnStartIndex - 1, 0);
-    var right = Math.Min(gN.ColumnEndIndex + 1, matrix[0].Length - 1) + 1; //exclusive count
+}
 
-    var topSpan = gN.RowIndex > 0 ?
-        matrix[gN.RowIndex - 1].AsSpan()[left..right] : [];
-
-    var botSpan = gN.RowIndex < matrix.Length - 1 ?
-        matrix[gN.RowIndex + 1].AsSpan()[left..right] : [];
-
-    //var midSpan = matrix[gameNumber.RowIndex].AsSpan()[left..right];
-    var isLeft = gN.ColumnStartIndex - 1 >= 0 && matrix[gN.RowIndex][left] != PlaceHolder;
-    var isRight = gN.ColumnEndIndex + 1 < matrix[0].Length && matrix[gN.RowIndex][right - 1] != PlaceHolder;
-
-    //var tokens = "0123456789.".AsSpan();
-    //var tokens = ValidTokens.AsSpan();
-
-    return topSpan.ContainsAnyExcept(PlaceHolder) ||
-        isLeft || isRight ||
-        botSpan.ContainsAnyExcept(PlaceHolder);
+static bool IsValidNumber(GameBoard board, GameNumber gameNumber)
+{
+    return board.GetNeighbor(gameNumber) is not null;
 }
 
 static GameBoard TransformInput(string[] lines)
@@ -142,26 +123,101 @@ static char[][] TransposeInput(string[] lines)
     return inputMatrix;
 }
 
+static class Constants
+{
+    internal const char PlaceHolder = '.';
+    internal const string ValidTokens = "0123456789.";
+}
+
 public readonly record struct GameBoard
 {
     public required char[][] InputMatrix { get; init; }
     public GameNumber[] GameNumbers { get; init; }
+
+    public readonly Span<char> SpanOf<T>(ISymbol<T> symbol)
+    {
+        return InputMatrix[symbol.RowIndex].AsSpan()[symbol.ColumnStartIndex..(symbol.ColumnEndIndex + 1)];
+    }
+
+    public readonly GameSymbol? GetNeighbor<T>(ISymbol<T> symbol)
+    {
+        var matrix = InputMatrix;
+
+        var left = Math.Max(symbol.ColumnStartIndex - 1, 0);
+        var right = Math.Min(symbol.ColumnEndIndex + 1, matrix[0].Length - 1) + 1; //exclusive count
+
+        var topSpan = symbol.RowIndex > 0 ?
+            matrix[symbol.RowIndex - 1].AsSpan()[left..right] : [];
+
+        var botSpan = symbol.RowIndex < matrix.Length - 1 ?
+            matrix[symbol.RowIndex + 1].AsSpan()[left..right] : [];
+
+        var isLeft = symbol.ColumnStartIndex - 1 >= 0 && matrix[symbol.RowIndex][left] != Constants.PlaceHolder;
+        var isRight = symbol.ColumnEndIndex + 1 < matrix[0].Length && matrix[symbol.RowIndex][right - 1] != Constants.PlaceHolder;
+
+        var topSearch = topSpan.IndexOfAnyExcept(Constants.PlaceHolder);
+        if (topSearch != -1)
+            return new GameSymbol()
+            {
+                ColumnStartIndex = symbol.ColumnStartIndex + topSearch,
+                RowIndex = symbol.RowIndex - 1
+            };
+
+        var botSearch = botSpan.IndexOfAnyExcept(Constants.PlaceHolder);
+        if (botSearch != -1)
+            return new GameSymbol()
+            {
+                ColumnStartIndex = symbol.ColumnStartIndex + botSearch,
+                RowIndex = symbol.RowIndex + 1
+            };
+
+        if (isLeft)
+            return new GameSymbol()
+            {
+                ColumnStartIndex = left,
+                RowIndex = symbol.RowIndex
+            };
+
+        if (isRight)
+            return new GameSymbol()
+            {
+                ColumnStartIndex = right - 1,
+                RowIndex = symbol.RowIndex
+            };
+
+        return null;
+    }
 }
 
-public readonly record struct GameNumber
+public interface ISymbol<T>
+{
+    int RowIndex { get; }
+    int ColumnStartIndex { get; }
+    int ColumnEndIndex { get; }
+    T Value(GameBoard board);
+}
+
+public readonly record struct GameSymbol : ISymbol<char>
+{
+    public required int RowIndex { get; init; }
+    public required int ColumnStartIndex { get; init; }
+    public int ColumnEndIndex { get => ColumnStartIndex; }
+
+    public char Value(GameBoard board)
+    {
+        return board.SpanOf(this)[0];
+    }
+}
+
+public readonly record struct GameNumber : ISymbol<int>
 {
     public required int RowIndex { get; init; }
     public required int ColumnStartIndex { get; init; }
     public required int ColumnEndIndex { get; init; }
 
-    public Span<char> Digits(GameBoard board)
+    public readonly int Value(GameBoard board)
     {
-        return board.InputMatrix[RowIndex].AsSpan()[ColumnStartIndex..(ColumnEndIndex + 1)];
-    }
-
-    public int Value(GameBoard board)
-    {
-        return int.Parse(Digits(board));
+        return int.Parse(board.SpanOf(this));
     }
 }
 
