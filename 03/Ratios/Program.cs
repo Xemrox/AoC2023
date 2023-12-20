@@ -1,4 +1,6 @@
 ﻿
+using System.Diagnostics;
+
 using Shared;
 
 var inputData = DataLoaderSingle.LoadInputData<GameBoard>(TransformInput);
@@ -44,12 +46,32 @@ static int Part1(SinglePuzzleInput<GameBoard> input)
 
 static int Part2(SinglePuzzleInput<GameBoard> input)
 {
-    return 0;
+    var board = input.Content;
+
+    var validNumbers = board.GameNumbers
+        .Where(x => IsValidNumber(board, x));
+
+    var gears = validNumbers
+        .Select(x => new { number = x, neighbor = board.GetNeighbor(x) })
+        .Where(pair => pair.neighbor?.Value(board) == Constants.Gear);
+
+    var specialGears = gears
+        .GroupBy(x => x.neighbor)
+        .Where(g => g.Count() >= 2);
+
+    var ratios = specialGears
+        .Select(group => group.Select(x => x.number))
+        .Select(number => GetRatio(board, number))
+        .ToArray();
+
+    return ratios.Sum();
 }
 
-static void GearRatios(GameBoard board)
+static int GetRatio(GameBoard board, IEnumerable<GameNumber> numbers)
 {
-
+    return numbers
+        .Select(x => x.Value(board))
+        .Aggregate((previous, next) => previous * next);
 }
 
 static bool IsValidNumber(GameBoard board, GameNumber gameNumber)
@@ -126,6 +148,7 @@ static char[][] TransposeInput(string[] lines)
 static class Constants
 {
     internal const char PlaceHolder = '.';
+    internal const char Gear = '*';
     internal const string ValidTokens = "0123456789.";
 }
 
@@ -159,7 +182,8 @@ public readonly record struct GameBoard
         if (topSearch != -1)
             return new GameSymbol()
             {
-                ColumnStartIndex = symbol.ColumnStartIndex + topSearch,
+                // relative index might shift if we don't align with left / right border
+                ColumnStartIndex = symbol.ColumnStartIndex + topSearch + (symbol.ColumnStartIndex > 0 ? -1 : 0),
                 RowIndex = symbol.RowIndex - 1
             };
 
@@ -167,7 +191,8 @@ public readonly record struct GameBoard
         if (botSearch != -1)
             return new GameSymbol()
             {
-                ColumnStartIndex = symbol.ColumnStartIndex + botSearch,
+                // relative index might shift if we don't align with left / right border
+                ColumnStartIndex = symbol.ColumnStartIndex + botSearch + (symbol.ColumnStartIndex > 0 ? -1 : 0),
                 RowIndex = symbol.RowIndex + 1
             };
 
@@ -197,6 +222,7 @@ public interface ISymbol<T>
     T Value(GameBoard board);
 }
 
+[DebuggerDisplay("({RowIndex}:{ColumnStartIndex})")]
 public readonly record struct GameSymbol : ISymbol<char>
 {
     public required int RowIndex { get; init; }
@@ -209,6 +235,7 @@ public readonly record struct GameSymbol : ISymbol<char>
     }
 }
 
+[DebuggerDisplay("({RowIndex}:{ColumnStartIndex}:{ColumnEndIndex})")]
 public readonly record struct GameNumber : ISymbol<int>
 {
     public required int RowIndex { get; init; }
