@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WaitForIt": {
+      "commandName": "Project",
+      "workingDirectory": "..\\"
+    }
+  }
+}
